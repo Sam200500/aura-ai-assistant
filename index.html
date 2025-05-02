@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Aura - Your ultimate AI companion for any task">
+  <meta name="theme-color" content="#3b82f6">
+  <title>Aura - Universal AI Assistant</title>
+  <link href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --container-bg: rgba(255, 255, 255, 0.98);
+      --chat-bg: #f5f5f5;
+      --chat-border: #e5e7eb;
+      --bubble-bg: #e5e7eb;
+      --bubble-user-bg: #3b82f6;
+      --text-color: #111827;
+      --header-color: #1f2937;
+      --button-bg: #3b82f6;
+      --button-hover: #2563eb;
+      --accent-color: #3b82f6;
+      --error-color: #ef4444;
+      --success-color: #22c55e;
+      --code-bg: #1f2937;
+      --code-text: #f3f4f6;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #111827;
+      --container-bg: rgba(31, 41, 55, 0.98);
+      --chat-bg: #1f2937;
+      --chat-border: #374151;
+      --bubble-bg: #374151;
+      --bubble-user-bg: #60a5fa;
+      --text-color: #f3f4f6;
+      --header-color: #ffffff;
+      --button-bg: #60a5fa;
+      --button-hover: #3b82f6;
+      --accent-color: #60a5fa;
+      --code-bg: #0f172a;
+      --code-text: #e5e7eb;
+    }
+
+    [data-theme="cosmic"] {
+      --bg-color: #1e1b4b;
+      --container-bg: rgba(30, 27, 75, 0.95);
+      --chat-bg: #312e81;
+      --chat-border: #4f46e5;
+      --bubble-bg: #4f46e5;
+      --bubble-user-bg: #818cf8;
+      --text-color: #e0e7ff;
+      --header-color: #ffffff;
+      --button-bg: #6366f1;
+      --button-hover: #4f46e5;
+      --accent-color: #6366f1;
+      --code-bg: #1e1b4b;
+      --code-text: #c7d2fe;
+    }
+
+    /* Base Styles */
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      background-color: var(--container-bg);
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header Styles */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--chat-border);
+      background: linear-gradient(to bottom, var(--container-bg), transparent);
+    }
+
+    .header__avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent-color);
+      transition: transform 0.3s ease;
+    }
+
+    .header__avatar:hover {
+      transform: scale(1.1);
+    }
+
+    .header__title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--header-color);
+      margin: 0;
+    }
+
+    /* Setup Section */
+    .setup {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .setup__title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--header-color);
+    }
+
+    .setup__description {
+      text-align: center;
+      color: var(--text-color);
+      opacity: 0.8;
+    }
+
+    .setup__input,
+    .setup__select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--chat-border);
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--text-color);
+    }
+
+    .setup__input:focus,
+    .setup__select:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      outline: none;
+    }
+
+    /* Chat Section */
+    .chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .chat {
+      background: var(--chat-bg);
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--chat-border);
+      margin-bottom: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-color) var(--chat-bg);
+      position: relative;
+    }
+
+    .chat.thinking::after {
+      content: 'Aura is processing...';
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+
+    .chat::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat::-webkit-scrollbar-track {
+      background: var(--chat-bg);
+    }
+
+    .chat::-webkit-scrollbar-thumb {
+      background: var(--accent-color);
+      border-radius: 4px;
+    }
+
+    .chat-bubble {
+      background: var(--bubble-bg);
+      color: var(--text-color);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 1rem;
+      max-width: 80%;
+      line-height: 1.6;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      animation: bubbleIn 0.3s ease;
+    }
+
+    @keyframes bubbleIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-bubble--user {
+      background: var(--bubble-user-bg);
+      color: white;
+      margin-left: auto;
+    }
+
+    .chat-bubble__sender {
+      font-weight: 600;
+      color: var(--header-color);
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-bubble__content pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+    }
+
+    .chat-bubble__content code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+    }
+
+    .chat-bubble__timestamp {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 0.5rem;
+      text-align: right;
+      display: block;
+    }
+
+    /* Input Area */
+    .input-area {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--container-bg);
+      border-top: 1px solid var(--chat-border);
+    }
+
+    .input-area__textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--chat-border);
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      resize: vertical;
+      min-height: 60px;
+      max-height: 150px;
+      background: #fff;
+      color: var(--text-color);
+    }
+
+    .input-area__textarea:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      outline: none;
+    }
+
+    .input-area__buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background-color: var(--button-bg);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--button-hover);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--chat-border);
+      color: var(--text-color);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--chat-bg);
+    }
+
+    .btn-danger {
+      background-color: var(--error-color);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      display: none;
+      position: absolute;
+      top: 4rem;
+      right: 1rem;
+      background: var(--container-bg);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      color: var(--text-color);
+      z-index: 1000;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      width: 300px;
+      border: 1px solid var(--chat-border);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .settings-panel__title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--header-color);
+    }
+
+    .settings-panel__close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      padding: 0.5rem;
+    }
+
+    .settings-panel__close:hover {
+      color: var(--accent-color);
+    }
+
+    .settings-panel__group {
+      margin-bottom: 1.5rem;
+    }
+
+    .settings-panel__label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: var(--header-color);
+    }
+
+    .settings-panel__select,
+    .settings-panel__range {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--chat-border);
+      background: #fff;
+      color: var(--text-color);
+    }
+
+    .settings-panel__range {
+      accent-color: var(--accent-color);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid var(--chat-border);
+    }
+
+    .action-buttons__button {
+      flex: 1;
+      min-width: 120px;
+      background: var(--button-bg);
+      color: white;
+      font-size: 0.9rem;
+    }
+
+    .action-buttons__button:hover {
+      background: var(--button-hover);
+    }
+
+    /* Code Editor */
+    .code-editor {
+      display: none;
+      margin-top: 1rem;
+      background: var(--code-bg);
+      border-radius: 0.5rem;
+      padding: 1rem;
+    }
+
+    .code-editor__textarea {
+      width: 100%;
+      background: transparent;
+      color: var(--code-text);
+      border: none;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .code-editor__textarea:focus {
+      outline: none;
+    }
+
+    .code-editor__buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .code-editor__output {
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      background: var(--chat-bg);
+      border-radius: 0.5rem;
+      border: 1px solid var(--chat-border);
+    }
+
+    /* Suggestions */
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .suggestions__button {
+      background: var(--bubble-bg);
+      color: var(--text-color);
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .suggestions__button:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      z-index: 2000;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .notification--show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notification--error {
+      background: var(--error-color);
+      color: white;
+    }
+
+    .notification--success {
+      background: var(--success-color);
+      color: white;
+    }
+
+    /* Avatar Upload */
+    .avatar-upload {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .avatar-upload__preview {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--chat-border);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 0;
+      }
+
+      .container {
+        border-radius: 0;
+        height: 100vh;
+        box-shadow: none;
+      }
+
+      .header {
+        padding: 1rem;
+      }
+
+      .header__title {
+        font-size: 1.25rem;
+      }
+
+      .chat-section {
+        padding: 0.5rem;
+      }
+
+      .chat {
+        margin-bottom: 0.5rem;
+      }
+
+      .chat-bubble {
+        max-width: 90%;
+      }
+
+      .input-area {
+        padding: 0.5rem;
+      }
+
+      .input-area__buttons {
+        justify-content: space-between;
+      }
+
+      .settings-panel {
+        width: 90%;
+        right: 5%;
+        top: 3rem;
+      }
+
+      .action-buttons__button {
+        min-width: 100px;
+        font-size: 0.85rem;
+      }
+    }
+
+    [aria-hidden="true"] {
+      display: none;
+    }
+
+    [aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="flex items-center gap-3">
+        <img id="headerAvatar" class="header__avatar" src="https://via.placeholder.com/40" alt="User Avatar">
+        <h1 class="header__title">Aura</h1>
+      </div>
+      <button id="settingsBtn" class="btn-secondary" aria-label="Open settings panel">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </button>
+    </header>
+
+    <section id="setup" class="setup" aria-labelledby="setup-title">
+      <h2 id="setup-title" class="setup__title">Welcome to Aura!</h2>
+      <p class="setup__description">Your universal AI assistant for any task—coding, learning, creating, and more.</p>
+      <div class="setup__group">
+        <label for="inputName" class="block text-sm font-medium mb-1">Your Name</label>
+        <input id="inputName" type="text" class="setup__input" placeholder="Enter your name" aria-required="true">
+      </div>
+      <div class="setup__group">
+        <label for="favTopic" class="block text-sm font-medium mb-1">Your Interest</label>
+        <input id="favTopic" type="text" class="setup__input" placeholder="e.g., Coding, History, Art" aria-required="true">
+      </div>
+      <div class="setup__group">
+        <label for="expertise" class="block text-sm font-medium mb-1">Your Expertise Level</label>
+        <select id="expertise" class="setup__select" aria-label="Select expertise level">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="expert">Expert</option>
+        </select>
+      </div>
+      <div class="setup__group">
+        <label for="langSelect" class="block text-sm font-medium mb-1">Preferred Language</label>
+        <select id="langSelect" class="setup__select" aria-label="Select preferred language">
+          <option value="en-US">English (US)</option>
+          <option value="es-ES">Spanish</option>
+          <option value="fr-FR">French</option>
+          <option value="de-DE">German</option>
+          <option value="zh-CN">Chinese (Simplified)</option>
+        </select>
+      </div>
+      <button onclick="saveUser()" class="btn-primary" aria-label="Start chatting">Begin Journey</button>
+    </section>
+
+    <section id="chatContainer" class="chat-section hidden" aria-live="polite">
+      <div id="chat" class="chat" role="log" aria-label="Chat conversation"></div>
+      <div class="input-area">
+        <textarea id="userInput" class="input-area__textarea" placeholder="Ask anything: code, math, writing, research..." aria-label="Type your message"></textarea>
+        <div class="input-area__buttons">
+          <button id="micBtn" class="btn-secondary" aria-label="Start voice input">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm5 3V4a1 1 0 10-2 0v3a1 1 0 102 0zm-3 5a4 4 0 004 4v1a1 1 0 102 0v-1a6 6 0 00-12 0v1a1 1 0 102 0v-1a4 4 0 004-4z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <button id="speakBtn" class="btn-secondary" aria-label="Read last response aloud">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.707 10a1 1 0 010 1.414l-1.414 1.414a1 1 0 01-1.414-1.414l.707-.707-.707-.707a1 1 0 111.414-1.414L14 8.586l.707.707a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <button id="uploadBtn" class="btn-secondary" aria-label="Upload a file">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <input type="file" id="fileUpload" class="hidden" accept=".txt,.jpg,.png,.pdf,.csv,.xlsx,.docx" onchange="handleFileUpload(event)">
+          <button id="whyBtn" class="btn-secondary" aria-label="Explain last response">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+          </button>
+          <button id="codeBtn" class="btn-secondary" aria-label="Open code editor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 10 12.316 7.736a1 1 0 010-1.414zM3.684 3.051a1 1 0 00-1.414 0l-4 4a1 1 0 000 1.414l4 4a1 1 0 001.414-1.414L1.414 10l2.27-2.264a1 1 0 000-1.414zM7 5a1 1 0 011 1v8a1 1 0 11-2 0V6a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <button onclick="sendMessage()" class="btn-primary" aria-label="Send message">Send</button>
+        </div>
+        <div id="codeEditor" class="code-editor">
+          <textarea id="codeInput" class="code-editor__textarea" placeholder="Write your code here (Python, JavaScript, HTML)"></textarea>
+          <div class="code-editor__buttons">
+            <button onclick="runCode()" class="btn-primary" aria-label="Run code">Run</button>
+            <button onclick="closeCodeEditor()" class="btn-secondary" aria-label="Close code editor">Close</button>
+          </div>
+          <div id="codeOutput" class="code-editor__output hidden"></div>
+        </div>
+        <div id="suggestions" class="suggestions" aria-label="Suggested commands"></div>
+      </div>
+      <div class="action-buttons">
+        <button class="action-buttons__button" onclick="triggerIntent('code')" aria-label="Code something">💻 Code</button>
+        <button class="action-buttons__button" onclick="triggerIntent('math')" aria-label="Solve math">🔢 Math</button>
+        <button class="action-buttons__button" onclick="triggerIntent('write')" aria-label="Write content">✍️ Write</button>
+        <button class="action-buttons__button" onclick="triggerIntent('research')" aria-label="Research topic">🔍 Research</button>
+        <button class="action-buttons__button" onclick="triggerIntent('translate')" aria-label="Translate text">🌐 Translate</button>
+        <button class="action-buttons__button" onclick="triggerIntent('learn')" aria-label="Learn something">🧠 Learn</button>
+        <button class="action-buttons__button" onclick="triggerIntent('create')" aria-label="Create content">🎨 Create</button>
+        <button class="action-buttons__button" onclick="triggerIntent('weather')" aria-label="Check weather">☁️ Weather</button>
+      </div>
+    </section>
+
+    <div id="settingsPanel" class="settings-panel" role="dialog" aria-labelledby="settings-title">
+      <button onclick="toggleSettings()" class="settings-panel__close" aria-label="Close settings">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <h3 id="settings-title" class="settings-panel__title">Settings</h3>
+      <div class="settings-panel__group">
+        <label for="voiceSpeed" class="settings-panel__label">Voice Speed: <span id="voiceSpeedLabel">1.0</span></label>
+        <input type="range" id="voiceSpeed" class="settings-panel__range" min="0.5" max="2" step="0.1" value="1" oninput="updateVoiceSpeed()" aria-label="Adjust voice speed">
+      </div>
+      <div class="settings-panel__group">
+        <label for="explanationStyle" class="settings-panel__label">Explanation Style</label>
+        <select id="explanationStyle" class="settings-panel__select" onchange="savePreference('explanationStyle', this.value)" aria-label="Select explanation style">
+          <option value="simple">Simple</option>
+          <option value="detailed">Detailed</option>
+          <option value="technical">Technical</option>
+        </select>
+      </div>
+      <div class="settings-panel__group">
+        <label for="voiceSelect" class="settings-panel__label">Voice</label>
+        <select id="voiceSelect" class="settings-panel__select" onchange="savePreference('voice', this.value)" aria-label="Select voice profile">
+          <option value="Orion">Orion - Professional</option>
+          <option value="Seraphina">Seraphina - Sophisticated</option>
+          <option value="Buddy">Buddy - Warm</option>
+          <option value="Sunny">Sunny - Cheerful</option>
+          <option value="Zenith">Zenith - Calm</option>
+          <option value="Luna">Luna - Gentle</option>
+          <option value="Spark">Spark - Lively</option>
+          <option value="Bolt">Bolt - Quick</option>
+          <option value="Rhys">Rhys - Irish</option>
+          <option value="Willow">Willow - Smooth</option>
+        </select>
+      </div>
+      <div class="settings-panel__group">
+        <label for="themeSelect" class="settings-panel__label">Theme</label>
+        <select id="themeSelect" class="settings-panel__select" onchange="savePreference('theme', this.value)" aria-label="Select theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="cosmic">Cosmic</option>
+        </select>
+      </div>
+      <div class="settings-panel__group">
+        <label for="avatarUpload" class="settings-panel__label">Avatar</label>
+        <div class="avatar-upload">
+          <img id="avatarPreview" class="avatar-upload__preview" src="https://via.placeholder.com/40" alt="Avatar preview">
+          <input type="file" id="avatarUpload" class="hidden" accept="image/*" onchange="handleAvatarUpload(event)" aria-label="Upload avatar image">
+          <button onclick="document.getElementById('avatarUpload').click()" class="btn-secondary">Upload</button>
+        </div>
+      </div>
+      <div class="settings-panel__group">
+        <label for="contextMemory" class="settings-panel__label">Conversation Memory</label>
+        <select id="contextMemory" class="settings-panel__select" onchange="savePreference('contextMemory', this.value)" aria-label="Select conversation memory duration">
+          <option value="short">Short (10 messages)</option>
+          <option value="medium">Medium (50 messages)</option>
+          <option value="long">Long (100 messages)</option>
+        </select>
+      </div>
+      <button onclick="exportChat()" class="btn-secondary w-full" aria-label="Export chat history">Export Chat</button>
+      <button onclick="clearChat()" class="btn-danger w-full mt-2" aria-label="Clear chat history">Clear Chat</button>
+    </div>
+
+    <div id="notification" class="notification" role="alert">Notification Text</div>
+  </div>
+
+  <script>
+    // Configure marked with options to disable mangle and headerIds
+    marked.setOptions({
+      mangle: false,
+      headerIds: false
+    });
+
+    // State management
+    let state = {
+      userName: localStorage.getItem('userName') || '',
+      favTopic: localStorage.getItem('favTopic') || '',
+      expertise: localStorage.getItem('expertise') || 'beginner',
+      lang: localStorage.getItem('lang') || 'en-US',
+      avatar: localStorage.getItem('avatar') || 'https://via.placeholder.com/40',
+      lastIntent: '',
+      lastResponseReason: '',
+      context: [],
+      voiceSpeed: parseFloat(localStorage.getItem('voiceSpeed') || '1'),
+      preferences: {
+        explanationStyle: localStorage.getItem('explanationStyle') || 'simple',
+        theme: localStorage.getItem('theme') || 'light',
+        voice: localStorage.getItem('voice') || 'Buddy',
+        contextMemory: localStorage.getItem('contextMemory') || 'medium'
+      },
+      chatHistory: JSON.parse(localStorage.getItem('chatHistory')) || [],
+      recognition: null,
+      synth: window.speechSynthesis,
+      preferredVoice: null,
+      isOnline: navigator.onLine
+    };
+
+    // Voice profiles
+    const voiceProfiles = {
+      Orion: { pitch: 120, rate: 1.1, freqRange: [100, 200], description: 'Professional, authoritative' },
+      Seraphina: { pitch: 180, rate: 1.0, freqRange: [150, 250], description: 'Sophisticated, trustworthy' },
+      Buddy: { pitch: 150, rate: 1.2, freqRange: [120, 220], description: 'Warm, engaging' },
+      Sunny: { pitch: 220, rate: 1.3, freqRange: [180, 300], description: 'Cheerful, optimistic' },
+      Zenith: { pitch: 110, rate: 0.9, freqRange: [90, 180], description: 'Calm, reassuring' },
+      Luna: { pitch: 160, rate: 0.8, freqRange: [140, 240], description: 'Gentle, soothing' },
+      Spark: { pitch: 200, rate: 1.4, freqRange: [170, 280], description: 'Lively, dynamic' },
+      Bolt: { pitch: 190, rate: 1.5, freqRange: [160, 260], description: 'Quick, assertive' },
+      Rhys: { pitch: 140, rate: 1.1, freqRange: [110, 210], description: 'Unique, subtle Irish lilt' },
+      Willow: { pitch: 170, rate: 1.0, freqRange: [130, 230], description: 'Smooth, distinctive' }
+    };
+
+    // Mock data
+    const mockData = {
+      knowledgeBase: {
+        coding: {
+          beginner: "Coding is writing instructions for computers using languages like Python or JavaScript.",
+          intermediate: "Coding involves paradigms like OOP, functional programming, and handling APIs.",
+          expert: "Advanced coding includes optimizing algorithms, concurrency, and system design."
+        },
+        math: {
+          beginner: "Math includes arithmetic, basic algebra, and geometry.",
+          intermediate: "Intermediate math covers calculus, linear algebra, and statistics.",
+          expert: "Advanced math includes differential equations, number theory, and cryptography."
+        },
+        history: {
+          beginner: "History is the study of past events, like wars and discoveries.",
+          intermediate: "History analyzes causes and effects of events, like the Renaissance or World Wars.",
+          expert: "Historiography examines sources, biases, and interpretations of events."
+        }
+      },
+      translations: {
+        'en-US': { hello: "Hello", help: "How can I help?" },
+        'es-ES': { hello: "Hola", help: "¿Cómo puedo ayudar?" },
+        'fr-FR': { hello: "Bonjour", help: "Comment puis-je aider ?" },
+        'de-DE': { hello: "Hallo", help: "Wie kann ich helfen?" },
+        'zh-CN': { hello: "你好", help: "我可以怎么帮助？" }
+      },
+      external: {
+        weather: ["New York: Sunny, 72°F", "London: Rainy, 55°F", "Tokyo: Snow, 30°F"],
+        news: ["Global tech summit 2025 announced", "New space mission launched", "Climate agreement signed"]
+      },
+      calendar: [
+        { date: '2025-05-02', time: '14:00', event: 'Project Sync' },
+        { date: '2025-05-02', time: '18:00', event: 'Dinner' },
+        { date: '2025-05-03', time: '10:00', event: 'Dentist' }
+      ]
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', initializeApp);
+    window.addEventListener('online', () => updateOnlineStatus(true));
+    window.addEventListener('offline', () => updateOnlineStatus(false));
+
+    function initializeApp() {
+      // Load preferences
+      document.getElementById('voiceSpeed').value = state.voiceSpeed;
+      updateVoiceSpeedLabel();
+      document.getElementById('explanationStyle').value = state.preferences.explanationStyle;
+      document.getElementById('voiceSelect').value = state.preferences.voice;
+      document.getElementById('themeSelect').value = state.preferences.theme;
+      document.getElementById('contextMemory').value = state.preferences.contextMemory;
+      document.getElementById('langSelect').value = state.lang;
+      if (state.userName) document.getElementById('inputName').value = state.userName;
+      if (state.favTopic) document.getElementById('favTopic').value = state.favTopic;
+      if (state.expertise) document.getElementById('expertise').value = state.expertise;
+      document.body.setAttribute('data-theme', state.preferences.theme);
+      document.getElementById('headerAvatar').src = state.avatar;
+      document.getElementById('avatarPreview').src = state.avatar;
+
+      // Load chat history
+      state.chatHistory.forEach(msg => addMessage(msg.sender, msg.text, true, msg.reason, msg.timestamp));
+
+      // Setup UI
+      if (state.userName && state.favTopic && state.expertise) {
+        document.getElementById('setup').classList.add('hidden');
+        document.getElementById('chatContainer').classList.remove('hidden');
+        if (!state.chatHistory.length) {
+          addMessage('Aura', `${mockData.translations[state.lang].hello}, ${state.userName}! I'm Aura, your universal assistant. Ask me to code, solve math, write, research, or anything else! 😊`, true);
+        }
+        checkProactiveAssistance();
+      }
+
+      // Event listeners
+      document.getElementById('settingsBtn').addEventListener('click', toggleSettings);
+      document.getElementById('userInput').addEventListener('input', handleInput);
+      document.getElementById('userInput').addEventListener('keypress', handleEnterKey);
+      MathJax.typesetPromise().catch(err => console.error('MathJax error:', err));
+    }
+
+    // Voice handling
+    function loadVoices() {
+      const voices = state.synth.getVoices();
+      state.preferredVoice = voices.find(v => v.lang === state.lang) || voices.find(v => v.lang.startsWith('en-')) || voices[0];
+      applyVoiceProfile();
+    }
+    if (state.synth.onvoiceschanged !== undefined) state.synth.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function applyVoiceProfile() {
+      const profile = voiceProfiles[state.preferences.voice] || voiceProfiles.Buddy;
+      if (state.preferredVoice) {
+        state.preferredVoice.pitch = profile.pitch / 120;
+        state.preferredVoice.rate = profile.rate;
+      }
+    }
+
+    // State management
+    function savePreference(key, value) {
+      state.preferences[key] = value;
+      localStorage.setItem(key, value);
+      if (key === 'theme') {
+        document.body.setAttribute('data-theme', value);
+        showNotification(`Theme switched to ${value}`, 'success');
+      }
+      if (key === 'voice') applyVoiceProfile();
+      if (key === 'explanationStyle' || key === 'contextMemory') {
+        showNotification(`${key} set to ${value}`, 'success');
+      }
+    }
+
+    function saveUser() {
+      state.userName = DOMPurify.sanitize(document.getElementById('inputName').value.trim());
+      state.favTopic = DOMPurify.sanitize(document.getElementById('favTopic').value.trim());
+      state.expertise = document.getElementById('expertise').value;
+      state.lang = document.getElementById('langSelect').value;
+      if (state.userName && state.favTopic && state.expertise) {
+        localStorage.setItem('userName', state.userName);
+        localStorage.setItem('favTopic', state.favTopic);
+        localStorage.setItem('expertise', state.expertise);
+        localStorage.setItem('lang', state.lang);
+        document.getElementById('setup').classList.add('hidden');
+        document.getElementById('chatContainer').classList.remove('hidden');
+        addMessage('Aura', `${mockData.translations[state.lang].hello}, ${state.userName}! Ready to explore ${state.favTopic} or tackle any task?`, true);
+        checkProactiveAssistance();
+      } else {
+        showNotification('Please fill all fields.', 'error');
+      }
+    }
+
+    // Chat functionality
+    function addMessage(sender, message, skipSpeak = false, reason = '', timestamp = new Date().toISOString()) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      div.className = `chat-bubble ${sender === 'Aura' ? '' : 'chat-bubble--user'}`;
+      const rendered = marked.parse(DOMPurify.sanitize(message));
+      div.innerHTML = `
+        <div class="chat-bubble__sender">${DOMPurify.sanitize(sender)}:</div>
+        <div class="chat-bubble__content">${rendered}</div>
+        <div class="chat-bubble__timestamp">${new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+      `;
+      chat.appendChild(div);
+      chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+      state.lastResponseReason = reason;
+      state.chatHistory.push({ sender, text: message, reason, timestamp });
+      state.context.push({ role: sender === 'Aura' ? 'assistant' : 'user', content: message });
+      const maxContext = { short: 10, medium: 50, long: 100 }[state.preferences.contextMemory];
+      state.context = state.context.slice(-maxContext);
+      state.chatHistory = state.chatHistory.slice(-100);
+      localStorage.setItem('chatHistory', JSON.stringify(state.chatHistory));
+      if (sender === 'Aura' && !skipSpeak) setTimeout(() => speakResponse(message), 100);
+      MathJax.typesetPromise([div]).catch(err => console.error('MathJax error:', err));
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('userInput');
+      const message = DOMPurify.sanitize(input.value.trim());
+      if (!message) return;
+      addMessage(state.userName, message);
+      processInput(message);
+      input.value = '';
+      adjustTextareaHeight();
+      updateSuggestions();
+    }
+
+    function handleEnterKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function adjustTextareaHeight() {
+      const textarea = document.getElementById('userInput');
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
+    }
+
+    function handleInput() {
+      adjustTextareaHeight();
+      updateSuggestions();
+    }
+
+    function triggerIntent(intent) {
+      const input = document.getElementById('userInput');
+      const prompts = {
+        code: 'Write a simple code snippet',
+        math: 'Solve a math problem',
+        write: 'Write a short paragraph',
+        research: `Research ${state.favTopic}`,
+        translate: `Translate "Hello" to ${state.lang === 'en-US' ? 'Spanish' : 'English'}`,
+        learn: `Teach me about ${state.favTopic}`,
+        create: 'Create a concept for a project',
+        weather: 'Check the weather'
+      };
+      input.value = prompts[intent] || `Let's do ${intent}`;
+      sendMessage();
+    }
+
+    // Intent processing
+    async function processInput(message) {
+      const chat = document.getElementById('chat');
+      chat.classList.add('thinking');
+      const lower = message.toLowerCase();
+      let response = '';
+      let reason = '';
+      let currentIntent = '';
+
+      const intents = {
+        greeting: ['hi', 'hello', 'hey', 'yo', 'sup', 'good morning', 'good afternoon', 'good evening'],
+        wellbeing: ['how are you', 'hows it going', 'how you doing'],
+        code: ['code', 'program', 'script', 'write code', 'coding'],
+        math: ['math', 'calculate', 'solve', 'equation', 'algebra', 'calculus'],
+        write: ['write', 'compose', 'draft', 'story', 'essay', 'poem'],
+        research: ['research', 'find', 'look up', 'info on', 'search'],
+        translate: ['translate', 'in spanish', 'in french', 'in german', 'in chinese'],
+        learn: ['learn', 'teach', 'tell me about', 'explain', 'fact about'],
+        guide: ['guide', 'how do i', 'steps to', 'help me with', 'plan a'],
+        task: ['task', 'reminder', 'timer', 'to-do'],
+        device: ['device', 'time', 'battery', 'date', 'network'],
+        personal: ['calendar', 'schedule', 'contacts', 'notes'],
+        updates: ['updates', 'news', 'what’s new', 'recent'],
+        create: ['create', 'generate', 'make', 'design'],
+        why: ['why', 'how come', 'explain that', 'reason'],
+        clear: ['clear chat', 'reset', 'delete history'],
+        thanks: ['thanks', 'thank you', 'cool', 'awesome'],
+        goodbye: ['bye', 'goodbye', 'see ya', 'later'],
+        weather: ['weather', 'forecast', 'temperature']
+      };
+
+      const apiResponse = await simulateApiCall(message);
+      if (apiResponse) {
+        response = apiResponse.response;
+        reason = apiResponse.reason;
+        currentIntent = apiResponse.intent;
+      } else if (intents.greeting.some(t => lower.startsWith(t))) {
+        currentIntent = 'greeting';
+        response = `${mockData.translations[state.lang].hello}, ${state.userName}! ${mockData.translations[state.lang].help}`;
+        reason = 'Detected greeting.';
+      } else if (intents.wellbeing.some(t => lower.includes(t))) {
+        currentIntent = 'wellbeing';
+        response = `I'm thriving, ${state.userName}! What's on your mind?`;
+        reason = 'Responded to wellbeing check.';
+      } else if (intents.code.some(t => lower.includes(t))) {
+        currentIntent = 'code';
+        response = handleCodeRequest(message);
+        reason = 'Generated code based on request.';
+        state.lastIntent = 'code_followup';
+      } else if (intents.math.some(t => lower.includes(t))) {
+        currentIntent = 'math';
+        response = handleMathRequest(message);
+        reason = 'Solved math problem.';
+        state.lastIntent = 'math_followup';
+      } else if (intents.write.some(t => lower.includes(t))) {
+        currentIntent = 'write';
+        response = handleWriteRequest(message);
+        reason = 'Generated written content.';
+        state.lastIntent = 'write_followup';
+      } else if (intents.research.some(t => lower.includes(t))) {
+        currentIntent = 'research';
+        response = handleResearchRequest(message);
+        reason = 'Performed research.';
+        state.lastIntent = 'research_followup';
+      } else if (intents.translate.some(t => lower.includes(t))) {
+        currentIntent = 'translate';
+        response = handleTranslateRequest(message);
+        reason = 'Translated text.';
+        state.lastIntent = 'translate_followup';
+      } else if (intents.learn.some(t => lower.includes(t))) {
+        currentIntent = 'learn';
+        response = handleLearnRequest(message);
+        reason = 'Provided educational content.';
+        state.lastIntent = 'learn_followup';
+      } else if (intents.guide.some(t => lower.includes(t))) {
+        currentIntent = 'guide';
+        response = handleGuideRequest(message);
+        reason = 'Provided step-by-step guidance.';
+        state.lastIntent = 'guide_followup';
+      } else if (intents.task.some(t => lower.includes(t))) {
+        currentIntent = 'task';
+        response = handleTaskRequest(message);
+        reason = 'Processed task request.';
+        state.lastIntent = 'task_followup';
+      } else if (intents.device.some(t => lower.includes(t))) {
+        currentIntent = 'device';
+        response = handleDeviceRequest(lower);
+        reason = 'Handled device query.';
+        state.lastIntent = 'device_followup';
+      } else if (intents.personal.some(t => lower.includes(t))) {
+        currentIntent = 'personal';
+        response = handlePersonalRequest(lower);
+        reason = 'Processed personal data.';
+        state.lastIntent = 'personal_followup';
+      } else if (intents.updates.some(t => lower.includes(t))) {
+        currentIntent = 'updates';
+        response = handleUpdatesRequest(message);
+        reason = 'Fetched updates.';
+        state.lastIntent = 'updates_followup';
+      } else if (intents.create.some(t => lower.includes(t))) {
+        currentIntent = 'create';
+        response = handleCreateRequest(message);
+        reason = 'Generated creative content.';
+        state.lastIntent = 'create_followup';
+      } else if (intents.why.some(t => lower.includes(t))) {
+        currentIntent = 'why';
+        response = state.lastResponseReason ? `I responded because: ${state.lastResponseReason}` : 'No prior reasoning.';
+        reason = 'Explained previous response.';
+      } else if (intents.clear.some(t => lower.includes(t))) {
+        currentIntent = 'clear';
+        clearChat();
+        chat.classList.remove('thinking');
+        return;
+      } else if (intents.thanks.some(t => lower.includes(t))) {
+        currentIntent = 'thanks';
+        response = `You're welcome, ${state.userName}! 😊`;
+        reason = 'Acknowledged thanks.';
+      } else if (intents.goodbye.some(t => lower.includes(t))) {
+        currentIntent = 'goodbye';
+        response = `See you soon, ${state.userName}! 👋`;
+        reason = 'Handled goodbye.';
+      } else if (intents.weather.some(t => lower.includes(t))) {
+        currentIntent = 'weather';
+        response = handleWeatherRequest();
+        reason = 'Fetched weather data.';
+        state.lastIntent = 'weather_followup';
+      } else if (lower.includes('what if')) {
+        currentIntent = 'hypothetical';
+        response = handleHypotheticalRequest(message);
+        reason = 'Explored hypothetical scenario.';
+        state.lastIntent = 'hypothetical_followup';
+      } else {
+        response = handleFollowupOrFallback(message);
+        reason = 'Handled followup or fallback.';
+      }
+
+      setTimeout(() => {
+        addMessage('Aura', response, false, reason);
+        chat.classList.remove('thinking');
+      }, 500 + Math.random() * 500);
+    }
+
+    // Intent handlers
+    async function simulateApiCall(message) {
+      if (!state.isOnline) {
+        return { response: `Offline: Limited response. Try again online.`, reason: 'Offline fallback', intent: 'offline' };
+      }
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const lower = message.toLowerCase();
+      if (lower.includes('code') || lower.includes('program')) {
+        return { response: handleCodeRequest(message), reason: 'Simulated code generation', intent: 'code' };
+      }
+      if (lower.includes('math') || lower.includes('calculate')) {
+        return { response: handleMathRequest(message), reason: 'Simulated math solver', intent: 'math' };
+      }
+      if (lower.includes('write') || lower.includes('story')) {
+        return { response: handleWriteRequest(message), reason: 'Simulated writing', intent: 'write' };
+      }
+      return null;
+    }
+
+    function handleCodeRequest(message) {
+      const topic = extractTopic(message, ['code', 'program', 'script', 'write code', 'coding']);
+      if (topic.includes('python')) {
+        return "```python\n# Sample Python code\ndef greet(name):\n    return f'Hello, {name}!'\n\nprint(greet('World'))\n```";
+      }
+      if (topic.includes('javascript')) {
+        return "```javascript\n// Sample JavaScript code\nfunction greet(name) {\n    return `Hello, ${name}!`;\n}\n\nconsole.log(greet('World'));\n```";
+      }
+      return `Let's code ${topic || 'something'}! Specify a language or task (e.g., "write a Python function").`;
+    }
+
+    function handleMathRequest(message) {
+      const expr = message.match(/calculate\s+(.+)/i)?.[1] || '';
+      try {
+        const result = eval(expr.replace(/[^0-9+\-*/(). ]/g, '')); // Simplified, not safe for production
+        return `$$ ${expr} = ${result} $$`;
+      } catch {
+        return "Please provide a valid math expression (e.g., 'calculate 2 + 3 * 4').";
+      }
+    }
+
+    function handleWriteRequest(message) {
+      const topic = extractTopic(message, ['write', 'compose', 'draft', 'story', 'essay', 'poem']);
+      if (topic.includes('story')) {
+        return `**A Short Story**: In a world where ${state.favTopic} ruled, a hero named ${state.userName} embarked on a quest to...`;
+      }
+      if (topic.includes('poem')) {
+        return `**Poem**:\nRoses are red,\nViolets are blue,\n${state.favTopic} inspires,\n${state.userName}, that's you!`;
+      }
+      return `Let's write about ${topic || 'something'}! Specify a type (e.g., story, essay, poem).`;
+    }
+
+    function handleResearchRequest(message) {
+      const topic = extractTopic(message, ['research', 'find', 'look up', 'info on', 'search']);
+      const knowledge = mockData.knowledgeBase[state.favTopic.toLowerCase()]?.[state.expertise] || `Info on ${topic || state.favTopic}: Need more details to research!`;
+      return knowledge;
+    }
+
+    function handleTranslateRequest(message) {
+      const text = message.match(/translate\s+(.+)\s+in\s+(\w+)/i);
+      if (text) {
+        const [, phrase, lang] = text;
+        const target = { spanish: 'es-ES', french: 'fr-FR', german: 'de-DE', chinese: 'zh-CN' }[lang.toLowerCase()];
+        if (target && mockData.translations[target]) {
+          return `Translation of "${phrase}" in ${lang}: ${mockData.translations[target][phrase.toLowerCase()] || phrase}`;
+        }
+      }
+      return "Please specify text and target language (e.g., 'translate hello in Spanish').";
+    }
+
+    function handleLearnRequest(message) {
+      const topic = extractTopic(message, ['learn', 'teach', 'tell me about', 'explain', 'fact about']);
+      const knowledge = mockData.knowledgeBase[topic?.toLowerCase()]?.[state.expertise] || `Let's learn about ${topic || state.favTopic}! Provide more details.`;
+      return knowledge;
+    }
+
+    function handleGuideRequest(message) {
+      const task = extractTopic(message, ['guide', 'how do i', 'steps to', 'help me with', 'plan a']);
+      if (task.includes('plan')) {
+        return `To plan ${task}:\n1. Define goals\n2. Set budget\n3. Choose date/venue\n4. Delegate tasks\n5. Confirm details`;
+      }
+      return `To ${task}:\n1. Start with a clear goal\n2. List resources\n3. Proceed step-by-step`;
+    }
+
+    function handleTaskRequest(message) {
+      if (message.includes('reminder')) {
+        return `Reminder set (simulated): ${message}`;
+      }
+      return `Task added (simulated): ${message}`;
+    }
+
+    function handleDeviceRequest(lower) {
+      const now = new Date();
+      if (lower.includes('time') || lower.includes('date')) {
+        return `Current time: ${now.toLocaleTimeString([], { timeStyle: 'short' })} on ${now.toLocaleDateString([], { dateStyle: 'medium' })}.`;
+      }
+      if (lower.includes('battery') && navigator.getBattery) {
+        navigator.getBattery().then(b => addMessage('Aura', `Battery: ${Math.round(b.level * 100)}%, ${b.charging ? 'charging' : 'not charging'}.`, false, 'Used battery API.'));
+        return 'Checking battery...';
+      }
+      return 'Device info: Try "time", "battery", or "network".';
+    }
+
+    function handlePersonalRequest(lower) {
+      let response = `Personal data (mock):\n`;
+      if (lower.includes('calendar')) {
+        const today = mockData.calendar.filter(e => e.date === '2025-05-02');
+        response += today.length ? `Today:\n${today.map(e => `- ${e.time}: ${e.event}`).join('\n')}` : 'No events today.';
+      } else {
+        response = 'Try "calendar", "contacts", or "notes".';
+      }
+      return response;
+    }
+
+    function handleUpdatesRequest(message) {
+      const category = inferCategory(message.toLowerCase());
+      const updates = mockData.external[category] || mockData.external.news;
+      return `Latest ${category}:\n${updates.join('\n')}`;
+    }
+
+    function handleCreateRequest(message) {
+      const topic = extractTopic(message, ['create', 'generate', 'make', 'design']);
+      return `Created: A concept for ${topic || state.favTopic}. Imagine a ${topic} with unique features...`;
+    }
+
+    function handleWeatherRequest() {
+      return mockData.external.weather[Math.floor(Math.random() * mockData.external.weather.length)];
+    }
+
+    function handleHypotheticalRequest(scenario) {
+      return `If ${scenario}, then perhaps [explore outcome]. What's your take?`;
+    }
+
+    function handleFollowupOrFallback(message) {
+      if (state.lastIntent) {
+        return `Let's continue with ${state.lastIntent.replace('_followup', '')}. More details?`;
+      }
+      return `${mockData.translations[state.lang].help} Try coding, math, writing, or research!`;
+    }
+
+    function inferCategory(lower) {
+      if (lower.includes('news') || lower.includes('updates')) return 'news';
+      if (lower.includes('weather')) return 'weather';
+      return 'news';
+    }
+
+    function extractTopic(message, triggers) {
+      const lower = message.toLowerCase();
+      for (let trigger of triggers) {
+        if (lower.includes(trigger + " ")) {
+          return message.substring(lower.indexOf(trigger) + trigger.length + 1).replace(/[?.!]/g, '').trim();
+        }
+      }
+      return '';
+    }
+
+    // Code editor
+    function openCodeEditor() {
+      const codeEditor = document.getElementById('codeEditor');
+      codeEditor.style.display = 'block';
+      document.getElementById('codeInput').focus();
+    }
+
+    function closeCodeEditor() {
+      const codeEditor = document.getElementById('codeEditor');
+      codeEditor.style.display = 'none';
+      document.getElementById('codeInput').value = '';
+      document.getElementById('codeOutput').classList.add('hidden');
+    }
+
+    function runCode() {
+      const code = DOMPurify.sanitize(document.getElementById('codeInput').value);
+      const output = document.getElementById('codeOutput');
+      output.classList.remove('hidden');
+      try {
+        if (code.includes('function') || code.includes('console.log')) {
+          const result = eval(code); // Simplified, not safe for production
+          output.textContent = result || 'Executed successfully!';
+        } else if (code.includes('def') || code.includes('print')) {
+          output.textContent = 'Python simulation: Code executed!';
+        } else {
+          output.textContent = 'Unsupported code. Try JavaScript or Python.';
+        }
+      } catch (e) {
+        output.textContent = `Error: ${e.message}`;
+      }
+    }
+
+    // Suggestions
+    function updateSuggestions() {
+      const input = document.getElementById('userInput').value.toLowerCase();
+      const suggestions = document.getElementById('suggestions');
+      suggestions.innerHTML = '';
+      const commands = [
+        'Write a Python function',
+        'Solve 2x + 3 = 7',
+        'Write a short story',
+        'Research quantum computing',
+        `Translate "hello" to ${state.lang === 'en-US' ? 'Spanish' : 'English'}`,
+        `Learn about ${state.favTopic}`,
+        'Check the weather'
+      ].filter(cmd => cmd.toLowerCase().includes(input) || input === '');
+      commands.slice(0, 4).forEach(cmd => {
+        const btn = document.createElement('button');
+        btn.className = 'suggestions__button';
+        btn.textContent = cmd;
+        btn.onclick = () => {
+          document.getElementById('userInput').value = cmd;
+          sendMessage();
+        };
+        suggestions.appendChild(btn);
+      });
+    }
+
+    // Proactive assistance
+    function checkProactiveAssistance() {
+      const now = new Date();
+      const soonEvents = mockData.calendar.filter(e => {
+        const eventTime = new Date(`${e.date}T${e.time}`);
+        return eventTime - now < 2 * 60 * 60 * 1000 && eventTime > now;
+      });
+      if (soonEvents.length) {
+        addMessage('Aura', `Reminder: ${soonEvents[0].event} at ${soonEvents[0].time}!`, true);
+      }
+    }
+
+    // UI interactions
+    function toggleSettings() {
+      const settings = document.getElementById('settingsPanel');
+      const isOpen = settings.style.display === 'block';
+      settings.style.display = isOpen ? 'none' : 'block';
+      settings.setAttribute('aria-hidden', !isOpen);
+      if (!isOpen) settings.querySelector('select').focus();
+      else document.getElementById('settingsBtn').focus();
+    }
+
+    function updateVoiceSpeed() {
+      state.voiceSpeed = parseFloat(document.getElementById('voiceSpeed').value);
+      updateVoiceSpeedLabel();
+      localStorage.setItem('voiceSpeed', state.voiceSpeed);
+      showNotification(`Voice speed: ${state.voiceSpeed.toFixed(1)}`, 'success');
+    }
+
+    function updateVoiceSpeedLabel() {
+      document.getElementById('voiceSpeedLabel').textContent = state.voiceSpeed.toFixed(1);
+    }
+
+    function clearChat() {
+      document.getElementById('chat').innerHTML = '';
+      state.chatHistory = [];
+      state.context = [];
+      localStorage.setItem('chatHistory', JSON.stringify([]));
+      addMessage('Aura', 'Chat cleared! Fresh start.', true);
+      showNotification('Chat history cleared', 'success');
+      state.lastIntent = '';
+    }
+
+    function exportChat() {
+      const blob = new Blob([state.chatHistory.map(m => `${m.sender} (${m.timestamp}): ${m.text}`).join('\n')], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'aura_chat_history.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+      showNotification('Chat exported!', 'success');
+    }
+
+    // Voice and file handling
+    function speakResponse(text) {
+      if (!state.synth || !text) return;
+      const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/[*`]/g, '').replace(/😊|👋|💻|🔢|✍️|🔍|🌐|🧠|🎨|☁️/g, '');
+      if (state.synth.speaking) state.synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.voice = state.preferredVoice || state.synth.getVoices()[0];
+      const profile = voiceProfiles[state.preferences.voice] || voiceProfiles.Buddy;
+      utterance.pitch = profile.pitch / 120;
+      utterance.rate = profile.rate * state.voiceSpeed;
+      utterance.volume = 0.9;
+      utterance.lang = state.lang;
+      utterance.onerror = e => showNotification(`Speech error: ${e.error}`, 'error');
+      state.synth.speak(utterance);
+    }
+
+    function startVoiceInput() {
+      if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+        showNotification('Voice input not supported', 'error');
+        return;
+      }
+      if (state.recognition) state.recognition.abort();
+      state.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      state.recognition.lang = state.lang;
+      state.recognition.continuous = false;
+      state.recognition.interimResults = false;
+      const micBtn = document.getElementById('micBtn');
+      micBtn.style.backgroundColor = 'var(--accent-color)';
+      state.recognition.onresult = e => {
+        document.getElementById('userInput').value = e.results[0][0].transcript;
+        sendMessage();
+      };
+      state.recognition.onerror = e => {
+        showNotification(`Voice error: ${e.error}`, 'error');
+        micBtn.style.backgroundColor = '';
+      };
+      state.recognition.onend = () => {
+        micBtn.style.backgroundColor = '';
+        state.recognition = null;
+      };
+      try {
+        state.recognition.start();
+      } catch (e) {
+        showNotification('Voice input failed', 'error');
+        micBtn.style.backgroundColor = '';
+      }
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      addMessage(state.userName, `Uploaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, true);
+      const reader = new FileReader();
+      reader.onload = ev => {
+        let analysis = `**File Analysis**: ${file.name}\n`;
+        if (file.type.startsWith('image/')) {
+          analysis += 'Image detected. Simulated analysis: Contains visual content.';
+        } else if (file.type.startsWith('text/') || file.type.includes('pdf')) {
+          analysis += `Content preview: ${ev.target.result.slice(0, 100)}...`;
+        } else {
+          analysis += `Type: ${file.type}. Limited analysis available.`;
+        }
+        addMessage('Aura', analysis);
+      };
+      reader.onerror = () => addMessage('Aura', `Error reading ${file.name}.`);
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function handleAvatarUpload(e) {
+      const file = e.target.files[0];
+      if (!file || !file.type.startsWith('image/')) {
+        showNotification('Please upload an image.', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.avatar = reader.result;
+        localStorage.setItem('avatar', state.avatar);
+        document.getElementById('headerAvatar').src = state.avatar;
+        document.getElementById('avatarPreview').src = state.avatar;
+        showNotification('Avatar updated!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Notifications and status
+    function showNotification(message, type = 'info') {
+      const notif = document.getElementById('notification');
+      notif.textContent = DOMPurify.sanitize(message);
+      notif.className = `notification notification--${type}`;
+      notif.classList.add('notification--show');
+      setTimeout(() => notif.classList.remove('notification--show'), 4000);
+    }
+
+    function updateOnlineStatus(isOnline) {
+      state.isOnline = isOnline;
+      showNotification(isOnline ? 'Online!' : 'Offline mode.', isOnline ? 'success' : 'error');
+    }
+
+    // Event listeners
+    document.getElementById('micBtn').addEventListener('click', startVoiceInput);
+    document.getElementById('speakBtn').addEventListener('click', () => {
+      const lastMsg = document.querySelector('#chat .chat-bubble:not(.chat-bubble--user) .chat-bubble__content');
+      speakResponse(lastMsg ? lastMsg.textContent : 'No response to read.');
+    });
+    document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileUpload').click());
+    document.getElementById('whyBtn').addEventListener('click', () => processInput('why'));
+    document.getElementById('codeBtn').addEventListener('click', openCodeEditor);
+  </script>
+</body>
+</html>
